@@ -5,8 +5,8 @@
 // ESP32 TWAI / CAN pins
 // Change to match your transceiver wiring
 // --------------------------------------------------
-static const gpio_num_t CAN_TX = GPIO_NUM_18;
-static const gpio_num_t CAN_RX = GPIO_NUM_19;
+static const gpio_num_t CAN_TX = GPIO_NUM_19;
+static const gpio_num_t CAN_RX = GPIO_NUM_18;
 
 // --------------------------------------------------
 // Tracked Haltech dash-relevant IDs
@@ -365,7 +365,7 @@ void setup() {
   twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(
       CAN_TX,
       CAN_RX,
-      TWAI_MODE_LISTEN_ONLY
+      TWAI_MODE_NORMAL
   );
 
   twai_timing_config_t t_config = TWAI_TIMING_CONFIG_1MBITS();
