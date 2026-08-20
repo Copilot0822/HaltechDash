@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HaltechDash Simulator</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="dash-stage" aria-label="Dash display simulator">
+        <div class="display-wrap">
+          <div class="display" id="left-display" aria-label="Left dash preview">
+            <div class="bezel"></div>
+            <div class="screen">
+              <div class="gauge">
+                <svg viewBox="0 0 260 260" class="arc-svg" aria-hidden="true">
+                  <path class="arc-bg" d="M 42.32 217.68 A 124 124 0 1 1 217.68 217.68"></path>
+                  <path class="arc-value blue" id="rpm-arc" d="M 42.32 217.68 A 124 124 0 1 1 217.68 217.68"></path>
+                </svg>
+                <div class="gauge-value">
+                  <strong id="rpm-value">0</strong>
+                  <span>RPM</span>
+                </div>
+                <div class="can-gauge" title="CAN bus status">
+                  <span class="can-dot" data-can-dot></span>
+                  <span data-can-text>CAN</span>
+                </div>
+              </div>
+              <div class="metric-grid left-grid">
+                <div><span>COOLANT</span><strong id="coolant-left-value">--</strong></div>
+                <div><span>TPS</span><strong id="tps-value">--</strong></div>
+                <div><span>MAP</span><strong id="map-value">--</strong></div>
+                <div><span>IAT</span><strong id="iat-left-value">--</strong></div>
+                <div><span>IGN</span><strong id="ignition-value">--</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="display-wrap">
+          <div class="display" id="right-display" aria-label="Right dash preview">
+            <div class="bezel"></div>
+            <div class="screen">
+              <div class="gauge">
+                <svg viewBox="0 0 260 260" class="arc-svg" aria-hidden="true">
+                  <path class="arc-bg" d="M 42.32 217.68 A 124 124 0 1 1 217.68 217.68"></path>
+                  <path class="arc-value blue" id="speed-arc" d="M 42.32 217.68 A 124 124 0 1 1 217.68 217.68"></path>
+                </svg>
+                <div class="gauge-value">
+                  <strong id="speed-main-value">0</strong>
+                  <span>KM/H</span>
+                </div>
+                <div class="can-gauge" title="CAN bus status">
+                  <span class="can-dot" data-can-dot></span>
+                  <span data-can-text>CAN</span>
+                </div>
+              </div>
+              <div class="warning" id="warning-value">SYSTEM OK</div>
+              <div class="metric-grid right-grid">
+                <div><span>COOLANT</span><strong id="coolant-value">--</strong></div>
+                <div><span>INJ DUTY</span><strong id="injector-value">--</strong></div>
+                <div><span>BATT</span><strong id="battery-value">--</strong></div>
+                <div><span>LAMBDA</span><strong id="lambda-value">--</strong></div>
+                <div><span>CAM</span><strong id="cam-value">--</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="control-panel" aria-label="Telemetry controls">
+        <div class="control-header">
+          <div>
+            <h1>HaltechDash Simulator</h1>
+            <p>Preview for two Waveshare ESP32-S3 2.8C round displays.</p>
+          </div>
+          <button class="icon-button" id="demo-toggle" type="button" title="Pause demo animation" aria-label="Pause demo animation">
+            <span class="icon" data-icon="pause"></span>
+          </button>
+        </div>
+
+        <div class="segmented" role="group" aria-label="Preset telemetry">
+          <button type="button" data-preset="idle">Idle</button>
+          <button type="button" data-preset="cruise" class="active">Cruise</button>
+          <button type="button" data-preset="pull">Pull</button>
+          <button type="button" data-preset="hot">Hot</button>
+        </div>
+
+        <div class="controls" id="controls"></div>
+
+        <div class="switches">
+          <label><input type="checkbox" id="can-online" checked> CAN online</label>
+          <label><input type="checkbox" id="check-engine"> Check engine</label>
+        </div>
+
+        <p class="source-note">Vehicle speed is simulated as GPS-derived data broadcast onto CAN by one display.</p>
+      </aside>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
