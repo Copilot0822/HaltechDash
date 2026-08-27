@@ -37,6 +37,8 @@ const presets = {
 
 let demoRunning = true;
 let lastPreset = "cruise";
+let bootStartMs = performance.now();
+const bootDurationMs = 1730;
 const rangeInputs = new Map();
 
 const $ = (selector) => document.querySelector(selector);
@@ -51,6 +53,24 @@ function setArc(path, value, max) {
   const ratio = clamp(value / max, 0, 1);
   path.style.strokeDasharray = String(length);
   path.style.strokeDashoffset = String(length * (1 - ratio));
+}
+
+function easeInOut(t) {
+  const v = clamp(t, 0, 1);
+  return v < 0.5 ? 2 * v * v : 1 - Math.pow(-2 * v + 2, 2) / 2;
+}
+
+function bootRatio(nowMs) {
+  const elapsed = nowMs - bootStartMs;
+  const upMs = 850;
+  const holdMs = 180;
+  const downMs = 700;
+
+  if (elapsed < 0) return 0;
+  if (elapsed <= upMs) return easeInOut(elapsed / upMs);
+  if (elapsed <= upMs + holdMs) return 1;
+  if (elapsed <= bootDurationMs) return 1 - easeInOut((elapsed - upMs - holdMs) / downMs);
+  return null;
 }
 
 function format(key, value) {
@@ -194,8 +214,15 @@ function bindEvents() {
 }
 
 function animate() {
-  if (demoRunning) {
-    const seconds = performance.now() / 1000;
+  const now = performance.now();
+  const sweep = bootRatio(now);
+
+  if (sweep !== null) {
+    telemetry.rpm = 9000 * sweep;
+    telemetry.speed = 260 * sweep;
+    render();
+  } else if (demoRunning) {
+    const seconds = now / 1000;
     const base = presets[lastPreset];
     telemetry.rpm = clamp(base.rpm + Math.sin(seconds * 2.1) * 450 + Math.sin(seconds * 0.7) * 180, 0, 9000);
     telemetry.tps = clamp(base.tps + Math.sin(seconds * 1.4) * 6, 0, 100);

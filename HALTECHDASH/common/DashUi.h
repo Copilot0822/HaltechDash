@@ -6,6 +6,11 @@
 #include "DashConfig.h"
 #include "HaltechCan.h"
 
+LV_FONT_DECLARE(lv_font_montserrat_18);
+LV_FONT_DECLARE(lv_font_montserrat_24);
+LV_FONT_DECLARE(lv_font_montserrat_32);
+LV_FONT_DECLARE(lv_font_montserrat_48);
+
 enum class DashSide : uint8_t {
   Left,
   Right
@@ -46,9 +51,27 @@ public:
     }
   }
 
+  uint16_t mainGaugeMax() const {
+    return (uint16_t)mainMax_;
+  }
+
+  void setBootSweepValue(uint16_t value) {
+    if (mainArc_ == nullptr || mainValue_ == nullptr) {
+      return;
+    }
+    value = (uint16_t)constrain((int)value, mainMin_, mainMax_);
+    lv_arc_set_value(mainArc_, value);
+
+    char valueBuf[16];
+    snprintf(valueBuf, sizeof(valueBuf), "%u", value);
+    lv_label_set_text(mainValue_, valueBuf);
+  }
+
 private:
   DashSide side_;
   uint32_t lastUpdateMs_ = 0;
+  int mainMin_ = 0;
+  int mainMax_ = 0;
 
   lv_obj_t* canDot_ = nullptr;
   lv_obj_t* canLabel_ = nullptr;
@@ -92,17 +115,17 @@ private:
   static lv_obj_t* makeMetric(lv_obj_t* parent, int centerX, int y, const char* name) {
     lv_obj_t* box = lv_obj_create(parent);
     lv_obj_remove_style_all(box);
-    lv_obj_set_size(box, 108, 44);
+    lv_obj_set_size(box, 126, 52);
     lv_obj_clear_flag(box, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_align(box, LV_ALIGN_TOP_MID, centerX - 240, y);
 
-    lv_obj_t* nameLabel = makeLabel(box, LV_FONT_DEFAULT, lv_color_hex(0x7E8B95));
+    lv_obj_t* nameLabel = makeLabel(box, &lv_font_montserrat_18, lv_color_hex(0x7E8B95));
     lv_label_set_text(nameLabel, name);
     lv_obj_align(nameLabel, LV_ALIGN_TOP_MID, 0, 0);
 
-    lv_obj_t* valueLabel = makeLabel(box, LV_FONT_DEFAULT, lv_color_hex(0xEAF2F7));
+    lv_obj_t* valueLabel = makeLabel(box, &lv_font_montserrat_24, lv_color_hex(0xEAF2F7));
     lv_label_set_text(valueLabel, "--");
-    lv_obj_align(valueLabel, LV_ALIGN_TOP_MID, 0, 20);
+    lv_obj_align(valueLabel, LV_ALIGN_TOP_MID, 0, 22);
     return valueLabel;
   }
 
@@ -115,12 +138,15 @@ private:
     lv_obj_set_style_bg_color(canDot_, lv_color_hex(0xD12828), LV_PART_MAIN);
     lv_obj_align(canDot_, LV_ALIGN_TOP_MID, -24, 62);
 
-    canLabel_ = makeLabel(root, LV_FONT_DEFAULT, lv_color_hex(0x9DABB4));
+    canLabel_ = makeLabel(root, &lv_font_montserrat_18, lv_color_hex(0x9DABB4));
     lv_label_set_text(canLabel_, "NO CAN");
     lv_obj_align(canLabel_, LV_ALIGN_TOP_MID, 18, 58);
   }
 
   void createMainArc(lv_obj_t* root, int min, int max, const char* unit, lv_color_t color) {
+    mainMin_ = min;
+    mainMax_ = max;
+
     mainArc_ = lv_arc_create(root);
     lv_obj_set_size(mainArc_, 462, 462);
     lv_arc_set_rotation(mainArc_, 135);
@@ -129,19 +155,23 @@ private:
     lv_arc_set_value(mainArc_, min);
     lv_obj_remove_style(mainArc_, nullptr, LV_PART_KNOB);
     lv_obj_clear_flag(mainArc_, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_set_style_arc_width(mainArc_, 10, LV_PART_MAIN);
-    lv_obj_set_style_arc_width(mainArc_, 10, LV_PART_INDICATOR);
+    lv_obj_set_style_arc_width(mainArc_, 18, LV_PART_MAIN);
+    lv_obj_set_style_arc_width(mainArc_, 18, LV_PART_INDICATOR);
     lv_obj_set_style_arc_color(mainArc_, lv_color_hex(0x18212A), LV_PART_MAIN);
     lv_obj_set_style_arc_color(mainArc_, color, LV_PART_INDICATOR);
     lv_obj_align(mainArc_, LV_ALIGN_CENTER, 0, 0);
 
-    mainValue_ = makeLabel(root, LV_FONT_DEFAULT, lv_color_hex(0xFFFFFF));
+    mainValue_ = makeLabel(root, &lv_font_montserrat_48, lv_color_hex(0xFFFFFF));
+    lv_obj_set_width(mainValue_, 300);
+    lv_obj_set_style_text_align(mainValue_, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
     lv_label_set_text(mainValue_, "0");
-    lv_obj_align(mainValue_, LV_ALIGN_CENTER, 0, -10);
+    lv_obj_align(mainValue_, LV_ALIGN_CENTER, 0, -40);
 
-    mainUnit_ = makeLabel(root, LV_FONT_DEFAULT, lv_color_hex(0x8D9AA3));
+    mainUnit_ = makeLabel(root, &lv_font_montserrat_24, lv_color_hex(0x8D9AA3));
+    lv_obj_set_width(mainUnit_, 180);
+    lv_obj_set_style_text_align(mainUnit_, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
     lv_label_set_text(mainUnit_, unit);
-    lv_obj_align(mainUnit_, LV_ALIGN_CENTER, 0, 42);
+    lv_obj_align(mainUnit_, LV_ALIGN_CENTER, 0, 20);
   }
 
   void createLeft(lv_obj_t* root) {
@@ -157,9 +187,11 @@ private:
   void createRight(lv_obj_t* root) {
     createMainArc(root, 0, 260, "KM/H", lv_color_hex(0x16A8F5));
 
-    warnLabel_ = makeLabel(root, LV_FONT_DEFAULT, lv_color_hex(0xFFCE4A));
+    warnLabel_ = makeLabel(root, &lv_font_montserrat_24, lv_color_hex(0xFFCE4A));
+    lv_obj_set_width(warnLabel_, 180);
+    lv_obj_set_style_text_align(warnLabel_, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
     lv_label_set_text(warnLabel_, "");
-    lv_obj_align(warnLabel_, LV_ALIGN_CENTER, 0, 88);
+    lv_obj_align(warnLabel_, LV_ALIGN_CENTER, 0, 62);
 
     auxLabels_[0] = makeMetric(root, 120, 334, "COOLANT");
     auxLabels_[1] = makeMetric(root, 240, 334, "INJ DUTY");

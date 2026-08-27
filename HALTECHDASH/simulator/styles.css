@@ -116,7 +116,7 @@ input {
 .arc-value {
   fill: none;
   stroke-linecap: round;
-  stroke-width: 10;
+  stroke-width: 18;
 }
 
 .arc-bg {
@@ -155,7 +155,7 @@ input {
 
 .gauge-value strong {
   display: block;
-  font-size: clamp(50px, 7vw, 88px);
+  font-size: clamp(58px, 8vw, 104px);
   line-height: 0.92;
   font-weight: 850;
   letter-spacing: 0;
@@ -165,7 +165,7 @@ input {
   display: block;
   margin-top: 8px;
   color: var(--muted);
-  font-size: clamp(11px, 1.3vw, 16px);
+  font-size: clamp(13px, 1.55vw, 20px);
   font-weight: 800;
 }
 
@@ -181,7 +181,7 @@ input {
   border-radius: 999px;
   background: rgba(5, 7, 10, 0.74);
   color: var(--muted);
-  font-size: clamp(9px, 1vw, 12px);
+  font-size: clamp(10px, 1.12vw, 14px);
   font-weight: 850;
   letter-spacing: 0;
   transform: translateX(-50%);
@@ -191,10 +191,10 @@ input {
   position: absolute;
   left: 27%;
   right: 27%;
-  bottom: 25%;
+  bottom: 31%;
   color: var(--green);
   text-align: center;
-  font-size: clamp(10px, 1.15vw, 14px);
+  font-size: clamp(11px, 1.28vw, 16px);
   font-weight: 850;
   letter-spacing: 0;
   padding: 4px 6px;
@@ -211,7 +211,7 @@ input {
   bottom: 6%;
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  row-gap: 6px;
+  row-gap: 7px;
   column-gap: 10px;
   text-align: center;
 }
@@ -224,7 +224,7 @@ input {
 .metric-grid span {
   display: block;
   color: var(--muted);
-  font-size: clamp(7px, 0.82vw, 10px);
+  font-size: clamp(8px, 0.95vw, 12px);
   font-weight: 800;
 }
 
@@ -233,7 +233,7 @@ input {
   min-height: 18px;
   margin-top: 2px;
   color: var(--text);
-  font-size: clamp(10px, 1.12vw, 15px);
+  font-size: clamp(12px, 1.32vw, 18px);
   line-height: 1.1;
   font-weight: 850;
   letter-spacing: 0;

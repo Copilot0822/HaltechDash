@@ -2,6 +2,7 @@
 
 #include "lv_conf.h"
 
+#include "../common/BootAnimation.h"
 #include "../common/DashConfig.h"
 #include "../common/HaltechCan.h"
 #include "../common/Waveshare28CDisplay.h"
@@ -27,6 +28,7 @@ void setup() {
     Serial.println("Display init failed");
   } else {
     ui.begin();
+    bootanimation::runMainGaugeSweep(ui, display);
   }
 
   canOk = ecuCan.begin(dashconfig::CAN_RX_PIN, dashconfig::CAN_TX_PIN, HaltechCan::Mode::Normal);

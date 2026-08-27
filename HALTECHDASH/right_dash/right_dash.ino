@@ -2,6 +2,7 @@
 
 #include "lv_conf.h"
 
+#include "../common/BootAnimation.h"
 #include "../common/DashConfig.h"
 #include "../common/HaltechCan.h"
 #include "../common/UbxGps.h"
@@ -31,6 +32,7 @@ void setup() {
     Serial.println("Display init failed");
   } else {
     ui.begin();
+    bootanimation::runMainGaugeSweep(ui, display);
   }
 
   gps.begin();

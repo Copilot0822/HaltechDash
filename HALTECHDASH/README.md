@@ -40,6 +40,17 @@ arduino-cli compile --fqbn esp32:esp32:esp32s3 --libraries "<Waveshare demo>\Ard
 
 The installed global LVGL on this machine is `9.5.0`; this starter uses the Waveshare-compatible LVGL `8.3.10` API.
 
+For faster repeat builds, use the helper scripts. They set the ESP32-S3 options, use the Waveshare LVGL 8.3.10 library, and keep persistent build directories under `.arduino-build/`.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\HALTECHDASH\tools\compile-left.ps1
+powershell -ExecutionPolicy Bypass -File .\HALTECHDASH\tools\compile-right.ps1
+powershell -ExecutionPolicy Bypass -File .\HALTECHDASH\tools\upload-left.ps1 -Port COM3
+powershell -ExecutionPolicy Bypass -File .\HALTECHDASH\tools\upload-right.ps1 -Port COM3
+```
+
+Avoid `--clean` during normal UI iteration. A clean build recompiles LVGL and is much slower.
+
 ## CAN Wiring
 
 Install one 3.3 V CAN transceiver per display unless you are building a shared receiver board. The ESP32-S3 has a built-in TWAI/CAN controller, but it still needs a CAN transceiver.
