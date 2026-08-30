@@ -10,7 +10,7 @@
 
 HaltechCan ecuCan;
 waveshare28c::Display display;
-DashboardUi ui(DashSide::Right);
+DashboardUi ui(DashSide::Third);
 
 bool displayOk = false;
 bool canOk = false;
@@ -34,8 +34,8 @@ void setup() {
   delay(500);
 
   Serial.println();
-  Serial.println("HaltechDash right dash starting");
-  Serial.println("Target board: Waveshare ESP32-S3-Touch-LCD-2.8C");
+  Serial.println("HaltechDash third dash starting");
+  Serial.println("Target board: Waveshare ESP32-S3 2.8C");
   printBoardIdentity();
 
   displayOk = display.begin();

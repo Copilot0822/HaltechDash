@@ -6,7 +6,6 @@ const telemetry = {
   cam: 24,
   ignition: 31,
   injector: 24,
-  speed: 77,
   coolant: 184,
   battery: 13.8,
   iat: 82,
@@ -23,16 +22,15 @@ const controls = [
   { key: "ignition", label: "Ignition angle", min: -10, max: 50, step: 1, unit: " deg" },
   { key: "injector", label: "Injector duty", min: 0, max: 100, step: 1, unit: "%" },
   { key: "cam", label: "Intake cam", min: -10, max: 55, step: 1, unit: " deg" },
-  { key: "speed", label: "GPS speed", min: 0, max: 260, step: 1, unit: " km/h" },
   { key: "coolant", label: "Coolant", min: 60, max: 250, step: 1, unit: " F" },
   { key: "battery", label: "Battery", min: 10, max: 15.2, step: 0.1, unit: " V" }
 ];
 
 const presets = {
-  idle: { rpm: 950, lambda: 1.0, tps: 2, map: 34, cam: 0, ignition: 14, injector: 2, speed: 0, coolant: 178, battery: 13.9, iat: 76 },
-  cruise: { rpm: 3200, lambda: 1.0, tps: 18, map: 54, cam: 24, ignition: 31, injector: 24, speed: 77, coolant: 184, battery: 13.8, iat: 82 },
-  pull: { rpm: 7600, lambda: 0.88, tps: 100, map: 96, cam: 42, ignition: 28, injector: 82, speed: 135, coolant: 190, battery: 13.6, iat: 94 },
-  hot: { rpm: 4100, lambda: 0.93, tps: 42, map: 86, cam: 36, ignition: 24, injector: 46, speed: 93, coolant: 226, battery: 12.4, iat: 128 }
+  idle: { rpm: 950, lambda: 1.0, tps: 2, map: 34, cam: 0, ignition: 14, injector: 2, coolant: 178, battery: 13.9, iat: 76 },
+  cruise: { rpm: 3200, lambda: 1.0, tps: 18, map: 54, cam: 24, ignition: 31, injector: 24, coolant: 184, battery: 13.8, iat: 82 },
+  pull: { rpm: 7600, lambda: 0.88, tps: 100, map: 96, cam: 42, ignition: 28, injector: 82, coolant: 190, battery: 13.6, iat: 94 },
+  hot: { rpm: 4100, lambda: 0.93, tps: 42, map: 86, cam: 36, ignition: 24, injector: 46, coolant: 226, battery: 12.4, iat: 128 }
 };
 
 let demoRunning = true;
@@ -103,8 +101,8 @@ function render() {
   $("#iat-left-value").textContent = displayOrDash("iat", " F");
   $("#ignition-value").textContent = displayOrDash("ignition", " deg");
 
-  $("#speed-main-value").textContent = telemetry.canOnline ? Math.round(telemetry.speed) : "0";
-  setArc($("#speed-arc"), telemetry.canOnline ? telemetry.speed : 0, 260);
+  $("#coolant-main-value").textContent = telemetry.canOnline ? Math.round(telemetry.coolant) : "--";
+  setArc($("#coolant-arc"), telemetry.canOnline ? telemetry.coolant : 0, 250);
 
   $("#coolant-value").textContent = displayOrDash("coolant", " F");
   $("#injector-value").textContent = displayOrDash("injector", "%");
@@ -219,7 +217,7 @@ function animate() {
 
   if (sweep !== null) {
     telemetry.rpm = 9000 * sweep;
-    telemetry.speed = 260 * sweep;
+    telemetry.coolant = 250 * sweep;
     render();
   } else if (demoRunning) {
     const seconds = now / 1000;
@@ -231,7 +229,6 @@ function animate() {
     telemetry.cam = clamp(base.cam + Math.sin(seconds * 1.1) * 3, -10, 55);
     telemetry.ignition = clamp(base.ignition + Math.sin(seconds * 1.6) * 2, -10, 50);
     telemetry.injector = clamp(base.injector + Math.sin(seconds * 1.9) * 3, 0, 100);
-  telemetry.speed = clamp(base.speed + Math.sin(seconds * 0.55) * 6, 0, 260);
     telemetry.coolant = clamp(base.coolant + Math.sin(seconds * 0.18) * 2, 60, 250);
     telemetry.battery = clamp(base.battery + Math.sin(seconds * 0.8) * 0.1, 10, 15.2);
     telemetry.iat = clamp(base.iat + Math.sin(seconds * 0.35) * 2, 40, 170);

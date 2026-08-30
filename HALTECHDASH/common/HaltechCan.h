@@ -25,6 +25,10 @@ struct DashStatus {
   bool fan2 = false;
   uint32_t updatedMs = 0;
 
+  bool seen() const {
+    return updatedMs != 0;
+  }
+
   bool fresh(uint32_t maxAgeMs) const {
     return updatedMs != 0 && (uint32_t)(millis() - updatedMs) <= maxAgeMs;
   }
@@ -40,7 +44,6 @@ struct DashTelemetry {
   DashField injectorDutyPercent;
   DashField ignitionAngleDeg;
   DashField lambda1;
-  DashField vehicleSpeedKmh;
   DashField intakeCamDeg;
   DashField batteryVoltage;
   DashField baroKpaAbs;
@@ -113,26 +116,6 @@ public:
 
   const DashTelemetry& data() const {
     return data_;
-  }
-
-  bool transmitGpsSpeedKmh(float speedKmh, bool fixValid, uint8_t satellites) {
-    if (!started_) {
-      return false;
-    }
-
-    const uint32_t now = millis();
-    put(data_.vehicleSpeedKmh, speedKmh, now);
-
-    const uint16_t rawSpeed = (uint16_t)constrain((int)lroundf(speedKmh * 10.0f), 0, 65535);
-    twai_message_t msg = {};
-    msg.identifier = dashconfig::GPS_SPEED_CAN_ID;
-    msg.data_length_code = 8;
-    msg.data[0] = (uint8_t)(rawSpeed >> 8);
-    msg.data[1] = (uint8_t)(rawSpeed & 0xFF);
-    msg.data[2] = fixValid ? 1 : 0;
-    msg.data[3] = satellites;
-
-    return twai_transmit(&msg, 0) == ESP_OK;
   }
 
   uint32_t msSinceBusRx() const {
@@ -223,10 +206,6 @@ private:
       case 0x470:
         put(data_.lambda1, u16be(d, 0) / 1000.0f, now);
         put(data_.gear, (float)((int8_t)d[7]), now);
-        break;
-
-      case dashconfig::GPS_SPEED_CAN_ID:
-        put(data_.vehicleSpeedKmh, u16be(d, 0) / 10.0f, now);
         break;
 
       default:

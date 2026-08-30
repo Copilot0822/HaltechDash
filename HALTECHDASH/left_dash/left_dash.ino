@@ -15,6 +15,20 @@ DashboardUi ui(DashSide::Left);
 bool displayOk = false;
 bool canOk = false;
 
+static void printBoardIdentity() {
+  const uint64_t mac = ESP.getEfuseMac();
+  Serial.printf("Board MAC: %02X:%02X:%02X:%02X:%02X:%02X\n",
+                (uint8_t)(mac >> 40),
+                (uint8_t)(mac >> 32),
+                (uint8_t)(mac >> 24),
+                (uint8_t)(mac >> 16),
+                (uint8_t)(mac >> 8),
+                (uint8_t)mac);
+  Serial.printf("Free heap: %lu  PSRAM: %lu\n",
+                (unsigned long)ESP.getFreeHeap(),
+                (unsigned long)ESP.getPsramSize());
+}
+
 void setup() {
   Serial.begin(dashconfig::SERIAL_BAUD);
   delay(500);
@@ -22,6 +36,7 @@ void setup() {
   Serial.println();
   Serial.println("HaltechDash left dash starting");
   Serial.println("Target board: Waveshare ESP32-S3-Touch-LCD-2.8C");
+  printBoardIdentity();
 
   displayOk = display.begin();
   if (!displayOk) {

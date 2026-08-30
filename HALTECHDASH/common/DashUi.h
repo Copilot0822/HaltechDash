@@ -13,7 +13,8 @@ LV_FONT_DECLARE(lv_font_montserrat_48);
 
 enum class DashSide : uint8_t {
   Left,
-  Right
+  Right,
+  Third
 };
 
 class DashboardUi {
@@ -29,8 +30,10 @@ public:
     createCanIndicator(root);
     if (side_ == DashSide::Left) {
       createLeft(root);
-    } else {
+    } else if (side_ == DashSide::Right) {
       createRight(root);
+    } else {
+      createThird(root);
     }
   }
 
@@ -45,9 +48,11 @@ public:
     lv_label_set_text(canLabel_, canOnline ? "CAN" : "NO CAN");
 
     if (side_ == DashSide::Left) {
-      updateLeft(t);
-    } else {
+      updateLeft(t, canOnline);
+    } else if (side_ == DashSide::Right) {
       updateRight(t, canOnline);
+    } else {
+      updateThird(t, canOnline);
     }
   }
 
@@ -96,8 +101,8 @@ private:
     lv_label_set_text(label, buf);
   }
 
-  static void setField(lv_obj_t* label, const DashField& field, const char* fmt, float scale = 1.0f, float offset = 0.0f) {
-    if (field.fresh(dashconfig::CAN_STALE_MS)) {
+  static void setField(lv_obj_t* label, const DashField& field, bool canOnline, const char* fmt, float scale = 1.0f, float offset = 0.0f) {
+    if (canOnline && field.seen()) {
       setTextFmt(label, fmt, field.value * scale + offset);
     } else {
       setText(label, "--");
@@ -185,7 +190,7 @@ private:
   }
 
   void createRight(lv_obj_t* root) {
-    createMainArc(root, 0, 260, "KM/H", lv_color_hex(0x16A8F5));
+    createMainArc(root, 0, 250, "COOLANT F", lv_color_hex(0x16A8F5));
 
     warnLabel_ = makeLabel(root, &lv_font_montserrat_24, lv_color_hex(0xFFCE4A));
     lv_obj_set_width(warnLabel_, 180);
@@ -200,36 +205,63 @@ private:
     auxLabels_[4] = makeMetric(root, 300, 394, "CAM");
   }
 
-  void updateLeft(const DashTelemetry& t) {
-    const uint16_t rpm = t.rpm.fresh(dashconfig::CAN_STALE_MS) ? (uint16_t)t.rpm.value : 0;
+  void createThird(lv_obj_t* root) {
+    createMainArc(root, 0, dashconfig::RPM_MAX, "RPM", lv_color_hex(0x16A8F5));
+
+    lv_obj_align(canDot_, LV_ALIGN_CENTER, 0, -150);
+    lv_obj_add_flag(canLabel_, LV_OBJ_FLAG_HIDDEN);
+
+    lv_obj_align(mainValue_, LV_ALIGN_CENTER, 0, -96);
+    lv_obj_align(mainUnit_, LV_ALIGN_CENTER, 0, -44);
+
+    warnLabel_ = makeLabel(root, &lv_font_montserrat_18, lv_color_hex(0x13D17B));
+    lv_obj_set_width(warnLabel_, 260);
+    lv_obj_set_style_text_align(warnLabel_, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+    lv_label_set_text(warnLabel_, "");
+    lv_obj_align(warnLabel_, LV_ALIGN_CENTER, 0, 34);
+
+    auxLabels_[0] = makeMetric(root, 120, 334, "COOLANT");
+    auxLabels_[1] = makeMetric(root, 240, 334, "TPS");
+    auxLabels_[2] = makeMetric(root, 360, 334, "MAP");
+    auxLabels_[3] = makeMetric(root, 180, 394, "BATT");
+    auxLabels_[4] = makeMetric(root, 300, 394, "LAMBDA");
+  }
+
+  void updateLeft(const DashTelemetry& t, bool canOnline) {
+    const uint16_t rpm = (canOnline && t.rpm.seen()) ? (uint16_t)t.rpm.value : 0;
     lv_arc_set_value(mainArc_, rpm);
     char rpmBuf[16];
     snprintf(rpmBuf, sizeof(rpmBuf), "%u", rpm);
     lv_label_set_text(mainValue_, rpmBuf);
 
-    setField(auxLabels_[0], t.coolantTempC, "%.0f F", 9.0f / 5.0f, 32.0f);
-    setField(auxLabels_[1], t.throttlePercent, "%.0f%%");
-    setField(auxLabels_[2], t.mapKpaAbs, "%.0f kPa");
-    setField(auxLabels_[3], t.intakeAirTempC, "%.0f F", 9.0f / 5.0f, 32.0f);
-    setField(auxLabels_[4], t.ignitionAngleDeg, "%.0f deg");
+    setField(auxLabels_[0], t.coolantTempC, canOnline, "%.0f F", 9.0f / 5.0f, 32.0f);
+    setField(auxLabels_[1], t.throttlePercent, canOnline, "%.0f%%");
+    setField(auxLabels_[2], t.mapKpaAbs, canOnline, "%.0f kPa");
+    setField(auxLabels_[3], t.intakeAirTempC, canOnline, "%.0f F", 9.0f / 5.0f, 32.0f);
+    setField(auxLabels_[4], t.ignitionAngleDeg, canOnline, "%.0f deg");
   }
 
   void updateRight(const DashTelemetry& t, bool canOnline) {
-    const float speedKmh = t.vehicleSpeedKmh.fresh(dashconfig::GPS_STALE_MS) ? t.vehicleSpeedKmh.value : 0.0f;
-    lv_arc_set_value(mainArc_, constrain((int)speedKmh, 0, 260));
-    setTextFmt(mainValue_, "%.0f", speedKmh);
+    if (canOnline && t.coolantTempC.seen()) {
+      const float coolantF = dashconfig::cToF(t.coolantTempC.value);
+      lv_arc_set_value(mainArc_, constrain((int)coolantF, 0, 250));
+      setTextFmt(mainValue_, "%.0f", coolantF);
+    } else {
+      lv_arc_set_value(mainArc_, 0);
+      setText(mainValue_, "--");
+    }
 
-    setField(auxLabels_[0], t.coolantTempC, "%.0f F", 9.0f / 5.0f, 32.0f);
-    setField(auxLabels_[1], t.injectorDutyPercent, "%.0f%%");
-    setField(auxLabels_[2], t.batteryVoltage, "%.1f V");
-    setField(auxLabels_[3], t.lambda1, "%.3f");
-    setField(auxLabels_[4], t.intakeCamDeg, "%.0f deg");
+    setField(auxLabels_[0], t.coolantTempC, canOnline, "%.0f F", 9.0f / 5.0f, 32.0f);
+    setField(auxLabels_[1], t.injectorDutyPercent, canOnline, "%.0f%%");
+    setField(auxLabels_[2], t.batteryVoltage, canOnline, "%.1f V");
+    setField(auxLabels_[3], t.lambda1, canOnline, "%.3f");
+    setField(auxLabels_[4], t.intakeCamDeg, canOnline, "%.0f deg");
 
-    const bool hotCoolant = t.coolantTempC.fresh(dashconfig::CAN_STALE_MS) &&
+    const bool hotCoolant = canOnline && t.coolantTempC.seen() &&
                             dashconfig::cToF(t.coolantTempC.value) >= dashconfig::HOT_COOLANT_F;
-    const bool lowBattery = t.batteryVoltage.fresh(dashconfig::CAN_STALE_MS) &&
+    const bool lowBattery = canOnline && t.batteryVoltage.seen() &&
                             t.batteryVoltage.value < dashconfig::LOW_BATTERY_V;
-    const bool cel = t.status.fresh(dashconfig::CAN_STALE_MS) && t.status.checkEngine;
+    const bool cel = canOnline && t.status.seen() && t.status.checkEngine;
 
     if (!canOnline) {
       lv_label_set_text(warnLabel_, "NO CAN DATA");
@@ -242,6 +274,38 @@ private:
       lv_obj_set_style_text_color(warnLabel_, lv_color_hex(0xFFCE4A), LV_PART_MAIN);
     } else if (lowBattery) {
       lv_label_set_text(warnLabel_, "LOW BATTERY");
+      lv_obj_set_style_text_color(warnLabel_, lv_color_hex(0xFFCE4A), LV_PART_MAIN);
+    } else {
+      lv_label_set_text(warnLabel_, "SYSTEM OK");
+      lv_obj_set_style_text_color(warnLabel_, lv_color_hex(0x13D17B), LV_PART_MAIN);
+    }
+  }
+
+  void updateThird(const DashTelemetry& t, bool canOnline) {
+    const uint16_t rpm = (canOnline && t.rpm.seen()) ? (uint16_t)t.rpm.value : 0;
+    lv_arc_set_value(mainArc_, rpm);
+    char rpmBuf[16];
+    snprintf(rpmBuf, sizeof(rpmBuf), "%u", rpm);
+    lv_label_set_text(mainValue_, rpmBuf);
+
+    setField(auxLabels_[0], t.coolantTempC, canOnline, "%.0f F", 9.0f / 5.0f, 32.0f);
+    setField(auxLabels_[1], t.throttlePercent, canOnline, "%.0f%%");
+    setField(auxLabels_[2], t.mapKpaAbs, canOnline, "%.0f kPa");
+    setField(auxLabels_[3], t.batteryVoltage, canOnline, "%.1f V");
+    setField(auxLabels_[4], t.lambda1, canOnline, "%.3f");
+
+    const bool hotCoolant = canOnline && t.coolantTempC.seen() &&
+                            dashconfig::cToF(t.coolantTempC.value) >= dashconfig::HOT_COOLANT_F;
+    const bool cel = canOnline && t.status.seen() && t.status.checkEngine;
+
+    if (!canOnline) {
+      lv_label_set_text(warnLabel_, "NO CAN DATA");
+      lv_obj_set_style_text_color(warnLabel_, lv_color_hex(0xE03C32), LV_PART_MAIN);
+    } else if (hotCoolant) {
+      lv_label_set_text(warnLabel_, "COOLANT HOT");
+      lv_obj_set_style_text_color(warnLabel_, lv_color_hex(0xE03C32), LV_PART_MAIN);
+    } else if (cel) {
+      lv_label_set_text(warnLabel_, "CHECK ENGINE");
       lv_obj_set_style_text_color(warnLabel_, lv_color_hex(0xFFCE4A), LV_PART_MAIN);
     } else {
       lv_label_set_text(warnLabel_, "SYSTEM OK");

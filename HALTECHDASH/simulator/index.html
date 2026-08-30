@@ -45,11 +45,11 @@
               <div class="gauge">
                 <svg viewBox="0 0 260 260" class="arc-svg" aria-hidden="true">
                   <path class="arc-bg" d="M 42.32 217.68 A 124 124 0 1 1 217.68 217.68"></path>
-                  <path class="arc-value blue" id="speed-arc" d="M 42.32 217.68 A 124 124 0 1 1 217.68 217.68"></path>
+                  <path class="arc-value blue" id="coolant-arc" d="M 42.32 217.68 A 124 124 0 1 1 217.68 217.68"></path>
                 </svg>
                 <div class="gauge-value">
-                  <strong id="speed-main-value">0</strong>
-                  <span>KM/H</span>
+                  <strong id="coolant-main-value">0</strong>
+                  <span>COOLANT F</span>
                 </div>
                 <div class="can-gauge" title="CAN bus status">
                   <span class="can-dot" data-can-dot></span>
@@ -94,7 +94,7 @@
           <label><input type="checkbox" id="check-engine"> Check engine</label>
         </div>
 
-        <p class="source-note">Vehicle speed is simulated as GPS-derived data broadcast onto CAN by one display.</p>
+        <p class="source-note">Values are simulated Haltech CAN channels for layout testing.</p>
       </aside>
     </main>
     <script src="app.js"></script>

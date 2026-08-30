@@ -226,11 +226,14 @@ static void lvTick(void*) {
 class Display {
 public:
   bool begin() {
+    Serial.println("Display init: I2C expander");
     Wire.begin(I2C_SDA, I2C_SCL);
     if (!tcaBegin()) {
+      Serial.println("Display init failed: TCA9554 I2C expander not found");
       return false;
     }
 
+    Serial.println("Display init: reset sequence");
     tcaSet(EXIO_MISC_ENABLE, false);
     tcaSet(EXIO_TOUCH_RESET, true);
     tcaSet(EXIO_LCD_RESET, false);
@@ -238,13 +241,23 @@ public:
     tcaSet(EXIO_LCD_RESET, true);
     delay(50);
 
-    if (!initSt7701() || !initRgbPanel()) {
+    Serial.println("Display init: ST7701 command init");
+    if (!initSt7701()) {
+      Serial.println("Display init failed: ST7701 command init");
       return false;
     }
 
+    Serial.println("Display init: RGB panel");
+    if (!initRgbPanel()) {
+      Serial.println("Display init failed: RGB panel");
+      return false;
+    }
+
+    Serial.println("Display init: backlight");
     ledcAttach(LCD_BACKLIGHT, 20000, 10);
     setBacklight(85);
 
+    Serial.println("Display init: LVGL");
     lv_init();
     const uint32_t bufPixels = LCD_WIDTH * 40;
     buf1 = heap_caps_malloc(bufPixels * sizeof(lv_color_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
@@ -252,6 +265,7 @@ public:
       buf1 = heap_caps_malloc(bufPixels * sizeof(lv_color_t), MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
     }
     if (buf1 == nullptr) {
+      Serial.println("Display init failed: LVGL draw buffer allocation");
       return false;
     }
 
@@ -271,8 +285,13 @@ public:
         .skip_unhandled_events = true,
     };
     esp_timer_handle_t tickTimer = nullptr;
-    esp_timer_create(&tickArgs, &tickTimer);
-    esp_timer_start_periodic(tickTimer, 2000);
+    if (esp_timer_create(&tickArgs, &tickTimer) != ESP_OK ||
+        esp_timer_start_periodic(tickTimer, 2000) != ESP_OK) {
+      Serial.println("Display init failed: LVGL tick timer");
+      return false;
+    }
+
+    Serial.println("Display init OK");
     return true;
   }
 
